@@ -1,450 +1,790 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>منصة الحلقات القرآنية</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Tajawal', sans-serif; }
-  </style>
-</head>
-<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col relative pb-10">
-
-  <!-- Header & Settings Bar -->
-  <header class="bg-emerald-700 text-white shadow-md">
-    <div class="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
-      <div>
-        <h1 class="text-lg font-bold">منصة الحلقات</h1>
-        <p id="subHeader" class="text-xs text-emerald-200">إعداد الحلقة والأستاذ</p>
-      </div>
-      <button onclick="toggleSetupModal()" class="text-xs bg-emerald-800 hover:bg-emerald-900 px-3 py-1.5 rounded-lg border border-emerald-600 transition active:scale-95">
-        تعديل البيانات
-      </button>
-    </div>
-
-    <!-- Navigation Tabs -->
-    <nav class="flex border-t border-emerald-600 text-sm font-medium text-center">
-      <button onclick="switchTab('recitation')" id="tabRecitation" class="flex-1 py-2.5 bg-emerald-800 border-b-2 border-white">تسجيل الحفظ</button>
-      <button onclick="switchTab('today')" id="tabToday" class="flex-1 py-2.5 hover:bg-emerald-800">السجل</button>
-      <button onclick="switchTab('addStudent')" id="tabStudent" class="flex-1 py-2.5 hover:bg-emerald-800">الطلاب</button>
-    </nav>
-  </header>
-
-  <!-- Main Container -->
-  <main class="flex-1 max-w-md w-full mx-auto p-4">
-
-    <!-- 1. واجهة تسجيل التسميع -->
-    <section id="sectionRecitation" class="space-y-4">
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 relative">
-        <label class="block text-sm font-medium text-gray-700 mb-1">ابحث عن اسم الطالب</label>
-        <div class="relative">
-          <input type="text" id="searchStudentInput" oninput="filterStudents()" placeholder="اكتب اسم الطالب..." 
-                 class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-          <div id="studentDropdown" class="hidden absolute top-full right-0 left-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-1 max-h-56 overflow-y-auto z-30"></div>
-        </div>
-      </div>
-
-      <!-- بطاقة بيانات التسميع الشاملة -->
-      <div id="recitationCard" class="hidden bg-white p-5 rounded-xl shadow-sm border border-emerald-500 space-y-4">
-        <div class="border-b pb-2 flex justify-between items-center">
-          <div>
-            <h3 id="selectedStudentName" class="font-bold text-emerald-800 text-lg">اسم الطالب</h3>
-            <span id="selectedStudentInfo" class="text-xs text-gray-500">هاتف الولي: -</span>
-          </div>
-          <button onclick="clearSelectedStudent()" class="text-xs text-red-500 hover:underline">تغيير</button>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1">ماذا حفظ اليوم؟</label>
-            <input type="text" id="inputTodayRecitation" placeholder="مثال: النبأ" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1">ماذا راجع اليوم؟</label>
-            <input type="text" id="inputTodayReview" placeholder="مثال: جزء عم" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1">العلامة (من 100)</label>
-            <input type="number" id="inputGrade" placeholder="مثال: 95" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1">عدد الأخطاء</label>
-            <input type="number" id="inputMistakes" value="0" min="0" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1">وظيفة الحفظ</label>
-            <input type="text" id="inputNextAssignment" placeholder="مثال: النازعات" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1">وظيفة المراجعة</label>
-            <input type="text" id="inputNextReview" placeholder="مثال: تبارك" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-gray-600 mb-1">ملاحظات للأهل (تظهر في الواتساب)</label>
-          <input type="text" id="inputNotes" placeholder="مثال: يحتاج لتركيز أكثر على أحكام المدود..." class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-        </div>
-
-        <div class="flex gap-2 pt-2">
-          <button onclick="saveRecitation()" id="btnSaveRecitation" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm shadow transition active:scale-95">
-            حفظ التسميع
-          </button>
-          <button onclick="sendWhatsAppNotice()" id="btnWhatsApp" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2.5 rounded-lg text-sm flex items-center justify-center transition active:scale-95">
-            واتساب
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- 2. واجهة سجل الأيام -->
-    <section id="sectionToday" class="hidden space-y-3">
-      <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-200 space-y-3">
-        <div class="flex justify-between items-center border-b pb-2">
-          <h2 class="font-bold text-gray-800">سجل التسميعات لحلقتي</h2>
-          <button onclick="loadRecitationsByDate()" class="text-xs text-emerald-600 hover:underline">تحديث الآن</button>
-        </div>
-        
-        <!-- محدد التاريخ (Date Picker) -->
-        <div class="flex items-center gap-2">
-          <label for="logDate" class="text-xs font-bold text-gray-600">اختر التاريخ:</label>
-          <input type="date" id="logDate" onchange="loadRecitationsByDate()" class="flex-1 border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none text-gray-700">
-        </div>
-      </div>
-
-      <!-- حاوية البطاقات المفصلة -->
-      <div id="todayList" class="space-y-3 pb-6">
-        <p class="text-sm text-gray-500 text-center py-4">جاري التحميل...</p>
-      </div>
-    </section>
-
-    <!-- 3. واجهة عرض الطلاب وإضافتهم -->
-    <section id="sectionAddStudent" class="hidden pb-24 space-y-3">
-      <div class="flex justify-between items-center px-1">
-        <div>
-          <h2 class="font-bold text-gray-800 text-base">قائمة طلاب حلقتي</h2>
-          <p id="studentsCount" class="text-xs text-gray-500">جاري التحميل...</p>
-        </div>
-        <button onclick="fetchStudents()" class="text-xs text-emerald-600 hover:underline">تحديث</button>
-      </div>
-
-      <div id="allStudentsList" class="space-y-2">
-        <p class="text-sm text-gray-500 text-center py-6">جاري جلب بيانات الطلاب...</p>
-      </div>
-
-      <div class="fixed bottom-4 left-4 right-4 max-w-md mx-auto z-20">
-        <button onclick="openNewStudentModal()" 
-                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-700/30 flex items-center justify-center gap-2 transition active:scale-95">
-          <span>+ إضافة طالب جديد للحلقة</span>
-        </button>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Modal: إعدادات الحلقة -->
-  <div id="setupModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-3 shadow-2xl transition-all">
-      <h3 class="font-bold text-gray-800 text-base border-b pb-2">بيانات الحلقة الحالية</h3>
-      <div>
-        <label class="text-xs text-gray-600 block mb-1">اسم المسجد</label>
-        <input type="text" id="cfgMosque" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-      </div>
-      <div>
-        <label class="text-xs text-gray-600 block mb-1">اسم الأستاذ</label>
-        <input type="text" id="cfgTeacher" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-      </div>
-      <div>
-        <label class="text-xs text-gray-600 block mb-1">اسم الحلقة (مهم جداً للفرز)</label>
-        <input type="text" id="cfgHalaqah" class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-emerald-700">
-      </div>
-      <button onclick="saveConfig()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-bold mt-2">
-        حفظ البيانات
-      </button>
-    </div>
-  </div>
-
-  <!-- Modal: إضافة طالب جديد -->
-  <div id="addStudentModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl transition-all">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="font-bold text-gray-800 text-base">تسجيل طالب جديد</h3>
-        <button onclick="closeNewStudentModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
-      </div>
-      
-      <div>
-        <label class="block text-xs font-bold text-gray-600 mb-1">اسم الطالب الثلاثي</label>
-        <input type="text" id="newStudentName" placeholder="مثال: أحمد عبد الله" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-      </div>
-      <div>
-        <label class="block text-xs font-bold text-gray-600 mb-1">العمر</label>
-        <input type="number" id="newStudentAge" placeholder="مثال: 12" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-      </div>
-      <div>
-        <label class="block text-xs font-bold text-gray-600 mb-1">رقم تواصل ولي الأمر (للواتساب)</label>
-        <input type="tel" id="newStudentPhone" placeholder="09xxxxxxxx" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-      </div>
-      <div class="flex gap-2 pt-2">
-        <button onclick="addNewStudent()" id="btnSubmitStudent" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm transition active:scale-95">
-          حفظ الطالب
-        </button>
-        <button onclick="closeNewStudentModal()" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium">
-          إلغاء
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // ⚠️ ضع الرابط الخاص بك هنا ⚠️
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5NxjZL3Hhc0Bxq_3p-EM2-7Zo3mVIzmWFVVJbY7E56CRjKrTBPSO6sld1HhvDFw/exec";
-
-    let students = [];
-    let selectedStudent = null;
-
-    window.addEventListener('DOMContentLoaded', () => {
-      loadConfig();
-      fetchStudents();
-      const today = new Date().toISOString().split("T")[0];
-      document.getElementById('logDate').value = today;
-    });
-
-    // إعدادات الحلقة
-    function loadConfig() {
-      const mosque = localStorage.getItem('mosque') || 'مسجد التقوى';
-      const teacher = localStorage.getItem('teacher') || 'أستاذ محمد';
-      const halaqah = localStorage.getItem('halaqah') || 'حلقة الفجر';
-      document.getElementById('cfgMosque').value = mosque;
-      document.getElementById('cfgTeacher').value = teacher;
-      document.getElementById('cfgHalaqah').value = halaqah;
-      document.getElementById('subHeader').innerText = `${mosque} - ${halaqah} (${teacher})`;
-    }
-
-    function saveConfig() {
-      localStorage.setItem('mosque', document.getElementById('cfgMosque').value);
-      localStorage.setItem('teacher', document.getElementById('cfgTeacher').value);
-      localStorage.setItem('halaqah', document.getElementById('cfgHalaqah').value);
-      loadConfig();
-      document.getElementById('setupModal').classList.add('hidden');
-      // تحديث البيانات فور تغيير الحلقة
-      fetchStudents();
-      loadRecitationsByDate();
-    }
-
-    function toggleSetupModal() { document.getElementById('setupModal').classList.remove('hidden'); }
-
-    // التنقل بين الشاشات
-    function switchTab(tab) {
-      document.getElementById('sectionRecitation').classList.add('hidden');
-      document.getElementById('sectionToday').classList.add('hidden');
-      document.getElementById('sectionAddStudent').classList.add('hidden');
-
-      document.getElementById('tabRecitation').className = "flex-1 py-2.5 hover:bg-emerald-800";
-      document.getElementById('tabToday').className = "flex-1 py-2.5 hover:bg-emerald-800";
-      document.getElementById('tabStudent').className = "flex-1 py-2.5 hover:bg-emerald-800";
-
-      if (tab === 'recitation') {
-        document.getElementById('sectionRecitation').classList.remove('hidden');
-        document.getElementById('tabRecitation').className = "flex-1 py-2.5 bg-emerald-800 border-b-2 border-white";
-      } else if (tab === 'today') {
-        document.getElementById('sectionToday').classList.remove('hidden');
-        document.getElementById('tabToday').className = "flex-1 py-2.5 bg-emerald-800 border-b-2 border-white";
-        loadRecitationsByDate();
-      } else if (tab === 'addStudent') {
-        document.getElementById('sectionAddStudent').classList.remove('hidden');
-        document.getElementById('tabStudent').className = "flex-1 py-2.5 bg-emerald-800 border-b-2 border-white";
-        renderAllStudentsList();
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>منصة الحلقات القرآنية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Tajawal", sans-serif;
       }
-    }
+    </style>
+  </head>
+  <body
+    class="bg-gray-100 text-gray-800 min-h-screen flex flex-col relative pb-10"
+  >
+    <!-- Header & Settings Bar -->
+    <header class="bg-emerald-700 text-white shadow-md">
+      <div class="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
+        <div>
+          <h1 class="text-lg font-bold">منصة الحلقات</h1>
+          <p id="subHeader" class="text-xs text-emerald-200">
+            إعداد الحلقة والأستاذ
+          </p>
+        </div>
+        <button
+          onclick="toggleSetupModal()"
+          class="text-xs bg-emerald-800 hover:bg-emerald-900 px-3 py-1.5 rounded-lg border border-emerald-600 transition active:scale-95"
+        >
+          تعديل البيانات
+        </button>
+      </div>
 
-    function openNewStudentModal() { document.getElementById('addStudentModal').classList.remove('hidden'); }
-    function closeNewStudentModal() { document.getElementById('addStudentModal').classList.add('hidden'); }
+      <!-- Navigation Tabs -->
+      <nav
+        class="flex border-t border-emerald-600 text-sm font-medium text-center"
+      >
+        <button
+          onclick="switchTab('recitation')"
+          id="tabRecitation"
+          class="flex-1 py-2.5 bg-emerald-800 border-b-2 border-white"
+        >
+          تسجيل الحفظ
+        </button>
+        <button
+          onclick="switchTab('today')"
+          id="tabToday"
+          class="flex-1 py-2.5 hover:bg-emerald-800"
+        >
+          السجل
+        </button>
+        <button
+          onclick="switchTab('addStudent')"
+          id="tabStudent"
+          class="flex-1 py-2.5 hover:bg-emerald-800"
+        >
+          الطلاب
+        </button>
+      </nav>
+    </header>
 
-    // الاتصال بقاعدة البيانات (جلب الطلاب مفلترين)
-    async function fetchStudents() {
-      try {
-        const currentHalaqah = localStorage.getItem('halaqah') || '';
-        const res = await fetch(`${SCRIPT_URL}?action=getStudents&halaqah=${encodeURIComponent(currentHalaqah)}`);
-        const json = await res.json();
-        if (json.status === "success") {
-          students = json.data;
+    <!-- Main Container -->
+    <main class="flex-1 max-w-md w-full mx-auto p-4">
+      <!-- 1. واجهة تسجيل التسميع -->
+      <section id="sectionRecitation" class="space-y-4">
+        <div
+          class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 relative"
+        >
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >ابحث عن اسم الطالب</label
+          >
+          <div class="relative">
+            <input
+              type="text"
+              id="searchStudentInput"
+              oninput="filterStudents()"
+              placeholder="اكتب اسم الطالب..."
+              class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+            />
+            <div
+              id="studentDropdown"
+              class="hidden absolute top-full right-0 left-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-1 max-h-56 overflow-y-auto z-30"
+            ></div>
+          </div>
+        </div>
+
+        <!-- بطاقة بيانات التسميع الشاملة -->
+        <div
+          id="recitationCard"
+          class="hidden bg-white p-5 rounded-xl shadow-sm border border-emerald-500 space-y-4"
+        >
+          <div class="border-b pb-2 flex justify-between items-center">
+            <div>
+              <h3
+                id="selectedStudentName"
+                class="font-bold text-emerald-800 text-lg"
+              >
+                اسم الطالب
+              </h3>
+              <span id="selectedStudentInfo" class="text-xs text-gray-500"
+                >هاتف الولي: -</span
+              >
+            </div>
+            <button
+              onclick="clearSelectedStudent()"
+              class="text-xs text-red-500 hover:underline"
+            >
+              تغيير
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1"
+                >ماذا حفظ اليوم؟</label
+              >
+              <input
+                type="text"
+                id="inputTodayRecitation"
+                placeholder="مثال: النبأ"
+                class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1"
+                >ماذا راجع اليوم؟</label
+              >
+              <input
+                type="text"
+                id="inputTodayReview"
+                placeholder="مثال: جزء عم"
+                class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1"
+                >العلامة (من 100)</label
+              >
+              <input
+                type="number"
+                id="inputGrade"
+                placeholder="مثال: 95"
+                class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1"
+                >عدد الأخطاء</label
+              >
+              <input
+                type="number"
+                id="inputMistakes"
+                value="0"
+                min="0"
+                class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1"
+                >وظيفة الحفظ</label
+              >
+              <input
+                type="text"
+                id="inputNextAssignment"
+                placeholder="مثال: النازعات"
+                class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1"
+                >وظيفة المراجعة</label
+              >
+              <input
+                type="text"
+                id="inputNextReview"
+                placeholder="مثال: تبارك"
+                class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1"
+              >ملاحظات للأهل (تظهر في الواتساب)</label
+            >
+            <input
+              type="text"
+              id="inputNotes"
+              placeholder="مثال: يحتاج لتركيز أكثر على أحكام المدود..."
+              class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+            />
+          </div>
+
+          <div class="flex gap-2 pt-2">
+            <button
+              onclick="saveRecitation()"
+              id="btnSaveRecitation"
+              class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm shadow transition active:scale-95"
+            >
+              حفظ التسميع
+            </button>
+            <button
+              onclick="sendWhatsAppNotice()"
+              id="btnWhatsApp"
+              class="bg-green-500 hover:bg-green-600 text-white px-3 py-2.5 rounded-lg text-sm flex items-center justify-center transition active:scale-95"
+            >
+              واتساب
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. واجهة سجل الأيام -->
+      <section id="sectionToday" class="hidden space-y-3">
+        <div
+          class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-200 space-y-3"
+        >
+          <div class="flex justify-between items-center border-b pb-2">
+            <h2 class="font-bold text-gray-800">سجل التسميعات لحلقتي</h2>
+            <button
+              onclick="loadRecitationsByDate()"
+              class="text-xs text-emerald-600 hover:underline"
+            >
+              تحديث الآن
+            </button>
+          </div>
+
+          <!-- محدد التاريخ (Date Picker) -->
+          <div class="flex items-center gap-2">
+            <label for="logDate" class="text-xs font-bold text-gray-600"
+              >اختر التاريخ:</label
+            >
+            <input
+              type="date"
+              id="logDate"
+              onchange="loadRecitationsByDate()"
+              class="flex-1 border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none text-gray-700"
+            />
+          </div>
+        </div>
+
+        <!-- حاوية البطاقات المفصلة -->
+        <div id="todayList" class="space-y-3 pb-6">
+          <p class="text-sm text-gray-500 text-center py-4">جاري التحميل...</p>
+        </div>
+      </section>
+
+      <!-- 3. واجهة عرض الطلاب وإضافتهم -->
+      <section id="sectionAddStudent" class="hidden pb-24 space-y-3">
+        <div class="flex justify-between items-center px-1">
+          <div>
+            <h2 class="font-bold text-gray-800 text-base">قائمة طلاب حلقتي</h2>
+            <p id="studentsCount" class="text-xs text-gray-500">
+              جاري التحميل...
+            </p>
+          </div>
+          <button
+            onclick="fetchStudents()"
+            class="text-xs text-emerald-600 hover:underline"
+          >
+            تحديث
+          </button>
+        </div>
+
+        <div id="allStudentsList" class="space-y-2">
+          <p class="text-sm text-gray-500 text-center py-6">
+            جاري جلب بيانات الطلاب...
+          </p>
+        </div>
+
+        <div class="fixed bottom-4 left-4 right-4 max-w-md mx-auto z-20">
+          <button
+            onclick="openNewStudentModal()"
+            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-emerald-700/30 flex items-center justify-center gap-2 transition active:scale-95"
+          >
+            <span>+ إضافة طالب جديد للحلقة</span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal: إعدادات الحلقة -->
+    <!-- Modal: إعدادات الحلقة (تسجيل الدخول) -->
+    <div
+      id="setupModal"
+      class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl transition-all"
+      >
+        <h3 class="font-bold text-gray-800 text-lg border-b pb-2">
+          تسجيل الدخول للحلقة
+        </h3>
+        <div>
+          <label class="text-xs text-gray-600 block mb-1">اسم المسجد</label>
+          <input
+            type="text"
+            id="cfgMosque"
+            class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+          />
+        </div>
+        <div>
+          <label class="text-xs text-gray-600 block mb-1">اسم الحلقة</label>
+          <input
+            type="text"
+            id="cfgHalaqah"
+            placeholder="مثال: حلقة الفجر"
+            class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-emerald-700"
+          />
+        </div>
+        <div>
+          <label class="text-xs text-gray-600 block mb-1">كلمة المرور</label>
+          <input
+            type="password"
+            id="cfgPassword"
+            placeholder="***"
+            class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+          />
+        </div>
+        <button
+          onclick="verifyAndSaveConfig()"
+          id="btnSaveConfig"
+          class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-sm font-bold mt-2 transition active:scale-95 shadow-md"
+        >
+          تسجيل الدخول
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal: إضافة طالب جديد -->
+    <div
+      id="addStudentModal"
+      class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 z-50"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl transition-all"
+      >
+        <div class="flex justify-between items-center border-b pb-2">
+          <h3 class="font-bold text-gray-800 text-base">تسجيل طالب جديد</h3>
+          <button
+            onclick="closeNewStudentModal()"
+            class="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-600 mb-1"
+            >اسم الطالب الثلاثي</label
+          >
+          <input
+            type="text"
+            id="newStudentName"
+            placeholder="مثال: أحمد عبد الله"
+            class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-600 mb-1"
+            >العمر</label
+          >
+          <input
+            type="number"
+            id="newStudentAge"
+            placeholder="مثال: 12"
+            class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-600 mb-1"
+            >رقم تواصل ولي الأمر (للواتساب)</label
+          >
+          <input
+            type="tel"
+            id="newStudentPhone"
+            placeholder="09xxxxxxxx"
+            class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+          />
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button
+            onclick="addNewStudent()"
+            id="btnSubmitStudent"
+            class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm transition active:scale-95"
+          >
+            حفظ الطالب
+          </button>
+          <button
+            onclick="closeNewStudentModal()"
+            class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium"
+          >
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ⚠️ ضع الرابط الخاص بك هنا ⚠️
+      const SCRIPT_URL =
+        "https://script.google.com/macros/s/AKfycbx2jNyAdv5i714a4EMcQaNxIsi4snppE-BRyZKZAnvkGO1RF5KAZ_ASSaSfJjyoqsY/exec";
+
+      let students = [];
+      let selectedStudent = null;
+
+      window.addEventListener("DOMContentLoaded", () => {
+        loadConfig();
+        fetchStudents();
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("logDate").value = today;
+      });
+
+      // إعدادات الحلقة
+      // تحميل الإعدادات الأولية
+      function loadConfig() {
+        const mosque = localStorage.getItem("mosque") || "مسجد التقوى";
+        const halaqah = localStorage.getItem("halaqah") || "";
+        const teacher = localStorage.getItem("teacher") || "";
+
+        document.getElementById("cfgMosque").value = mosque;
+        document.getElementById("cfgHalaqah").value = halaqah;
+
+        if (halaqah && teacher) {
+          document.getElementById("subHeader").innerText =
+            `${mosque} - ${halaqah} (${teacher})`;
+        } else {
+          document.getElementById("subHeader").innerText =
+            `يرجى تسجيل الدخول للحلقة`;
+          toggleSetupModal(); // إجبار الأستاذ على الدخول أول مرة
+        }
+      }
+
+      function toggleSetupModal() {
+        document.getElementById("setupModal").classList.remove("hidden");
+      }
+
+      // التحقق من كلمة المرور وحفظ الإعدادات
+      async function verifyAndSaveConfig() {
+        const mosque = document.getElementById("cfgMosque").value.trim();
+        const halaqah = document.getElementById("cfgHalaqah").value.trim();
+        const password = document.getElementById("cfgPassword").value.trim();
+        const btn = document.getElementById("btnSaveConfig");
+
+        if (!halaqah || !password)
+          return alert("يرجى إدخال اسم الحلقة وكلمة المرور");
+
+        btn.disabled = true;
+        btn.innerText = "جاري التحقق...";
+
+        const payload = {
+          action: "verifyHalaqah",
+          halaqahName: halaqah,
+          password: password,
+        };
+
+        try {
+          const res = await fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload),
+          });
+          const json = await res.json();
+
+          if (json.status === "success") {
+            // تسجيل دخول ناجح
+            localStorage.setItem("mosque", mosque);
+            localStorage.setItem("halaqah", halaqah);
+            localStorage.setItem("teacher", json.teacherName); // أخذنا اسم الأستاذ مباشرة من الشيت
+
+            document.getElementById("cfgPassword").value = ""; // تصفير حقل كلمة المرور للأمان
+            document.getElementById("subHeader").innerText =
+              `${mosque} - ${halaqah} (${json.teacherName})`;
+            document.getElementById("setupModal").classList.add("hidden");
+
+            // تحميل بيانات الحلقة
+            fetchStudents();
+            loadRecitationsByDate();
+            alert(`تم الدخول بنجاح! أهلاً بك ${json.teacherName}`);
+          } else {
+            // كلمة السر أو اسم الحلقة خطأ
+            alert(json.message);
+          }
+        } catch (err) {
+          alert("حدث خطأ أثناء الاتصال بالخادم");
+        } finally {
+          btn.disabled = false;
+          btn.innerText = "تسجيل الدخول";
+        }
+      }
+      function toggleSetupModal() {
+        document.getElementById("setupModal").classList.remove("hidden");
+      }
+
+      // التنقل بين الشاشات
+      function switchTab(tab) {
+        document.getElementById("sectionRecitation").classList.add("hidden");
+        document.getElementById("sectionToday").classList.add("hidden");
+        document.getElementById("sectionAddStudent").classList.add("hidden");
+
+        document.getElementById("tabRecitation").className =
+          "flex-1 py-2.5 hover:bg-emerald-800";
+        document.getElementById("tabToday").className =
+          "flex-1 py-2.5 hover:bg-emerald-800";
+        document.getElementById("tabStudent").className =
+          "flex-1 py-2.5 hover:bg-emerald-800";
+
+        if (tab === "recitation") {
+          document
+            .getElementById("sectionRecitation")
+            .classList.remove("hidden");
+          document.getElementById("tabRecitation").className =
+            "flex-1 py-2.5 bg-emerald-800 border-b-2 border-white";
+        } else if (tab === "today") {
+          document.getElementById("sectionToday").classList.remove("hidden");
+          document.getElementById("tabToday").className =
+            "flex-1 py-2.5 bg-emerald-800 border-b-2 border-white";
+          loadRecitationsByDate();
+        } else if (tab === "addStudent") {
+          document
+            .getElementById("sectionAddStudent")
+            .classList.remove("hidden");
+          document.getElementById("tabStudent").className =
+            "flex-1 py-2.5 bg-emerald-800 border-b-2 border-white";
           renderAllStudentsList();
         }
-      } catch (err) { console.error("فشل الجلب:", err); }
-    }
-
-    function renderAllStudentsList() {
-      const container = document.getElementById('allStudentsList');
-      const countLabel = document.getElementById('studentsCount');
-      if (!students || students.length === 0) {
-        container.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">لا يوجد طلاب مسجلين في هذه الحلقة.</p>';
-        countLabel.innerText = '0 طلاب';
-        return;
       }
-      countLabel.innerText = `الإجمالي: ${students.length} طالب`;
-      container.innerHTML = students.map((s, idx) => `
+
+      function openNewStudentModal() {
+        document.getElementById("addStudentModal").classList.remove("hidden");
+      }
+      function closeNewStudentModal() {
+        document.getElementById("addStudentModal").classList.add("hidden");
+      }
+
+      // الاتصال بقاعدة البيانات (جلب الطلاب مفلترين)
+      async function fetchStudents() {
+        try {
+          const currentHalaqah = localStorage.getItem("halaqah") || "";
+          const res = await fetch(
+            `${SCRIPT_URL}?action=getStudents&halaqah=${encodeURIComponent(currentHalaqah)}`,
+          );
+          const json = await res.json();
+          if (json.status === "success") {
+            students = json.data;
+            renderAllStudentsList();
+          }
+        } catch (err) {
+          console.error("فشل الجلب:", err);
+        }
+      }
+
+      function renderAllStudentsList() {
+        const container = document.getElementById("allStudentsList");
+        const countLabel = document.getElementById("studentsCount");
+        if (!students || students.length === 0) {
+          container.innerHTML =
+            '<p class="text-sm text-gray-400 text-center py-8">لا يوجد طلاب مسجلين في هذه الحلقة.</p>';
+          countLabel.innerText = "0 طلاب";
+          return;
+        }
+        countLabel.innerText = `الإجمالي: ${students.length} طالب`;
+        container.innerHTML = students
+          .map(
+            (s, idx) => `
         <div class="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center">
           <div class="flex gap-3">
             <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-sm">${idx + 1}</div>
             <div>
               <h4 class="font-bold text-gray-800 text-sm">${s.name}</h4>
-              <p class="text-xs text-gray-500">العمر: ${s.age||'-'} • <span dir="ltr">${s.phone||'لا يوجد'}</span></p>
+              <p class="text-xs text-gray-500">العمر: ${s.age || "-"} • <span dir="ltr">${s.phone || "لا يوجد"}</span></p>
             </div>
           </div>
           <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-md">${s.halaqah}</span>
         </div>
-      `).join('');
-    }
+      `,
+          )
+          .join("");
+      }
 
-    async function addNewStudent() {
-      const name = document.getElementById('newStudentName').value.trim();
-      const age = document.getElementById('newStudentAge').value;
-      const phone = document.getElementById('newStudentPhone').value.trim();
-      const btn = document.getElementById('btnSubmitStudent');
+      async function addNewStudent() {
+        const name = document.getElementById("newStudentName").value.trim();
+        const age = document.getElementById("newStudentAge").value;
+        const phone = document.getElementById("newStudentPhone").value.trim();
+        const btn = document.getElementById("btnSubmitStudent");
 
-      if (!name) return alert("يرجى كتابة اسم الطالب");
-      btn.disabled = true; btn.innerText = "جاري الحفظ...";
+        if (!name) return alert("يرجى كتابة اسم الطالب");
+        btn.disabled = true;
+        btn.innerText = "جاري الحفظ...";
 
-      const payload = {
-        action: "addStudent", studentName: name, age: age, parentPhone: phone,
-        halaqahName: localStorage.getItem('halaqah') || '',
-        teacherName: localStorage.getItem('teacher') || '',
-        mosqueName: localStorage.getItem('mosque') || ''
-      };
+        const payload = {
+          action: "addStudent",
+          studentName: name,
+          age: age,
+          parentPhone: phone,
+          halaqahName: localStorage.getItem("halaqah") || "",
+          teacherName: localStorage.getItem("teacher") || "",
+          mosqueName: localStorage.getItem("mosque") || "",
+        };
 
-      try {
-        await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-        document.getElementById('newStudentName').value = '';
-        document.getElementById('newStudentAge').value = '';
-        document.getElementById('newStudentPhone').value = '';
-        closeNewStudentModal();
-        await fetchStudents();
-        switchTab('recitation');
-      } catch (err) { alert("خطأ أثناء إضافة الطالب"); } finally { btn.disabled = false; btn.innerText = "حفظ الطالب"; }
-    }
+        try {
+          await fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload),
+          });
+          document.getElementById("newStudentName").value = "";
+          document.getElementById("newStudentAge").value = "";
+          document.getElementById("newStudentPhone").value = "";
+          closeNewStudentModal();
+          await fetchStudents();
+          switchTab("recitation");
+        } catch (err) {
+          alert("خطأ أثناء إضافة الطالب");
+        } finally {
+          btn.disabled = false;
+          btn.innerText = "حفظ الطالب";
+        }
+      }
 
-    function filterStudents() {
-      const q = document.getElementById('searchStudentInput').value.trim();
-      const dropdown = document.getElementById('studentDropdown');
-      if (!q) { dropdown.classList.add('hidden'); return; }
-      
-      const matches = students.filter(s => s.name.includes(q));
-      if (matches.length === 0) {
-        dropdown.innerHTML = '<div class="p-3 text-sm text-gray-500 text-center">لا يوجد طالب بهذا الاسم</div>';
-      } else {
-        dropdown.innerHTML = matches.map(s => `
+      function filterStudents() {
+        const q = document.getElementById("searchStudentInput").value.trim();
+        const dropdown = document.getElementById("studentDropdown");
+        if (!q) {
+          dropdown.classList.add("hidden");
+          return;
+        }
+
+        const matches = students.filter((s) => s.name.includes(q));
+        if (matches.length === 0) {
+          dropdown.innerHTML =
+            '<div class="p-3 text-sm text-gray-500 text-center">لا يوجد طالب بهذا الاسم</div>';
+        } else {
+          dropdown.innerHTML = matches
+            .map(
+              (s) => `
           <div onclick="selectStudent('${s.id}')" class="p-3 hover:bg-emerald-50 cursor-pointer border-b text-sm flex justify-between">
             <span class="font-bold">${s.name}</span>
           </div>
-        `).join('');
-      }
-      dropdown.classList.remove('hidden');
-    }
-
-    function selectStudent(id) {
-      selectedStudent = students.find(s => s.id === id);
-      document.getElementById('studentDropdown').classList.add('hidden');
-      document.getElementById('searchStudentInput').value = '';
-      document.getElementById('selectedStudentName').innerText = selectedStudent.name;
-      document.getElementById('selectedStudentInfo').innerText = `هاتف: ${selectedStudent.phone || 'غير مسجل'}`;
-      document.getElementById('recitationCard').classList.remove('hidden');
-    }
-
-    function clearSelectedStudent() {
-      selectedStudent = null;
-      document.getElementById('recitationCard').classList.add('hidden');
-    }
-
-    async function saveRecitation() {
-      if (!selectedStudent) return;
-      const grade = document.getElementById('inputGrade').value;
-      const btn = document.getElementById('btnSaveRecitation');
-
-      if (!grade) return alert("يرجى إدخال العلامة على الأقل");
-      btn.disabled = true; btn.innerText = "جاري الحفظ...";
-
-      const payload = {
-        action: "saveRecitation", studentName: selectedStudent.name,
-        halaqahName: localStorage.getItem('halaqah') || '',
-        todayRecitation: document.getElementById('inputTodayRecitation').value,
-        todayReview: document.getElementById('inputTodayReview').value,
-        grade: grade, mistakesCount: document.getElementById('inputMistakes').value,
-        nextAssignment: document.getElementById('inputNextAssignment').value,
-        nextReview: document.getElementById('inputNextReview').value,
-        notes: document.getElementById('inputNotes').value
-      };
-
-      try {
-        await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-        ['inputTodayRecitation','inputTodayReview','inputGrade','inputNextAssignment','inputNextReview','inputNotes'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('inputMistakes').value = '0';
-        clearSelectedStudent();
-        alert("تم حفظ التسميع بنجاح!");
-      } catch (err) { alert("حدث خطأ أثناء الحفظ"); } finally { btn.disabled = false; btn.innerText = "حفظ التسميع"; }
-    }
-
-    function sendWhatsAppNotice() {
-      if (!selectedStudent || !selectedStudent.phone) return alert("لا يوجد هاتف مسجل لولي الأمر");
-      
-      const val = (id) => document.getElementById(id).value || 'لا يوجد';
-      const msg = `السلام عليكم ورحمة الله،\nإنجاز الطالب: *${selectedStudent.name}*\n\n📖 حفظ اليوم: *${val('inputTodayRecitation')}*\n🔄 مراجعة اليوم: *${val('inputTodayReview')}*\n🎯 العلامة: *${val('inputGrade')}*\n\n📍 وظيفة الحفظ: *${val('inputNextAssignment')}*\n📍 وظيفة المراجعة: *${val('inputNextReview')}*${val('inputNotes') !== 'لا يوجد' ? `\n📝 ملاحظات: *${val('inputNotes')}*` : ''}\n\nوفقه الله.`;
-      
-      const phone = selectedStudent.phone.replace(/[^0-9]/g, '');
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-
-    // سجل التسميعات مفلتر بالتاريخ واسم الحلقة
-    async function loadRecitationsByDate() {
-      const cont = document.getElementById('todayList');
-      const selectedDate = document.getElementById('logDate').value;
-      const currentHalaqah = localStorage.getItem('halaqah') || '';
-      
-      cont.innerHTML = '<p class="text-sm text-gray-500 text-center py-6">جاري التحميل...</p>';
-      
-      if (!selectedDate) {
-         cont.innerHTML = '<p class="text-sm text-amber-500 text-center py-6">الرجاء تحديد تاريخ صحيح.</p>';
-         return;
+        `,
+            )
+            .join("");
+        }
+        dropdown.classList.remove("hidden");
       }
 
-      try {
-        const res = await fetch(`${SCRIPT_URL}?action=getRecitationsByDate&date=${selectedDate}&halaqah=${encodeURIComponent(currentHalaqah)}`);
-        const json = await res.json();
-        
-        if (json.status === "success" && json.data.length > 0) {
-          cont.innerHTML = json.data.map(i => `
+      function selectStudent(id) {
+        selectedStudent = students.find((s) => s.id === id);
+        document.getElementById("studentDropdown").classList.add("hidden");
+        document.getElementById("searchStudentInput").value = "";
+        document.getElementById("selectedStudentName").innerText =
+          selectedStudent.name;
+        document.getElementById("selectedStudentInfo").innerText =
+          `هاتف: ${selectedStudent.phone || "غير مسجل"}`;
+        document.getElementById("recitationCard").classList.remove("hidden");
+      }
+
+      function clearSelectedStudent() {
+        selectedStudent = null;
+        document.getElementById("recitationCard").classList.add("hidden");
+      }
+
+      async function saveRecitation() {
+        if (!selectedStudent) return;
+        const grade = document.getElementById("inputGrade").value;
+        const btn = document.getElementById("btnSaveRecitation");
+
+        if (!grade) return alert("يرجى إدخال العلامة على الأقل");
+        btn.disabled = true;
+        btn.innerText = "جاري الحفظ...";
+
+        const payload = {
+          action: "saveRecitation",
+          studentName: selectedStudent.name,
+          halaqahName: localStorage.getItem("halaqah") || "",
+          todayRecitation: document.getElementById("inputTodayRecitation")
+            .value,
+          todayReview: document.getElementById("inputTodayReview").value,
+          grade: grade,
+          mistakesCount: document.getElementById("inputMistakes").value,
+          nextAssignment: document.getElementById("inputNextAssignment").value,
+          nextReview: document.getElementById("inputNextReview").value,
+          notes: document.getElementById("inputNotes").value,
+        };
+
+        try {
+          await fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload),
+          });
+          [
+            "inputTodayRecitation",
+            "inputTodayReview",
+            "inputGrade",
+            "inputNextAssignment",
+            "inputNextReview",
+            "inputNotes",
+          ].forEach((id) => (document.getElementById(id).value = ""));
+          document.getElementById("inputMistakes").value = "0";
+          clearSelectedStudent();
+          alert("تم حفظ التسميع بنجاح!");
+        } catch (err) {
+          alert("حدث خطأ أثناء الحفظ");
+        } finally {
+          btn.disabled = false;
+          btn.innerText = "حفظ التسميع";
+        }
+      }
+
+      function sendWhatsAppNotice() {
+        if (!selectedStudent || !selectedStudent.phone)
+          return alert("لا يوجد هاتف مسجل لولي الأمر");
+
+        const val = (id) => document.getElementById(id).value || "لا يوجد";
+        const msg = `السلام عليكم ورحمة الله،\nإنجاز الطالب: *${selectedStudent.name}*\n\n📖 حفظ اليوم: *${val("inputTodayRecitation")}*\n🔄 مراجعة اليوم: *${val("inputTodayReview")}*\n🎯 العلامة: *${val("inputGrade")}*\n\n📍 وظيفة الحفظ: *${val("inputNextAssignment")}*\n📍 وظيفة المراجعة: *${val("inputNextReview")}*${val("inputNotes") !== "لا يوجد" ? `\n📝 ملاحظات: *${val("inputNotes")}*` : ""}\n\nوفقه الله.`;
+
+        const phone = selectedStudent.phone.replace(/[^0-9]/g, "");
+        window.open(
+          `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,
+          "_blank",
+        );
+      }
+
+      // سجل التسميعات مفلتر بالتاريخ واسم الحلقة
+      async function loadRecitationsByDate() {
+        const cont = document.getElementById("todayList");
+        const selectedDate = document.getElementById("logDate").value;
+        const currentHalaqah = localStorage.getItem("halaqah") || "";
+
+        cont.innerHTML =
+          '<p class="text-sm text-gray-500 text-center py-6">جاري التحميل...</p>';
+
+        if (!selectedDate) {
+          cont.innerHTML =
+            '<p class="text-sm text-amber-500 text-center py-6">الرجاء تحديد تاريخ صحيح.</p>';
+          return;
+        }
+
+        try {
+          const res = await fetch(
+            `${SCRIPT_URL}?action=getRecitationsByDate&date=${selectedDate}&halaqah=${encodeURIComponent(currentHalaqah)}`,
+          );
+          const json = await res.json();
+
+          if (json.status === "success" && json.data.length > 0) {
+            cont.innerHTML = json.data
+              .map(
+                (i) => `
             <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-2 text-sm">
               <div class="flex justify-between items-center border-b pb-2">
                 <p class="font-bold text-gray-800 text-base">${i.studentName}</p>
-                <span class="inline-block px-2.5 py-1 rounded-md text-xs font-bold ${i.grade >= 80 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                <span class="inline-block px-2.5 py-1 rounded-md text-xs font-bold ${i.grade >= 80 ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}">
                   ${i.grade} / 100
                 </span>
               </div>
               <div class="grid grid-cols-2 gap-2 text-xs text-gray-600 mt-1">
-                <p><span class="font-bold text-gray-800">📖 حفظ:</span> ${i.todayRecitation || '-'}</p>
-                <p><span class="font-bold text-gray-800">🔄 مراجعة:</span> ${i.todayReview || '-'}</p>
-                <p><span class="font-bold text-gray-800">📍 حفظ قادم:</span> ${i.nextAssignment || '-'}</p>
-                <p><span class="font-bold text-gray-800">📍 مراجعة قادمة:</span> ${i.nextReview || '-'}</p>
+                <p><span class="font-bold text-gray-800">📖 حفظ:</span> ${i.todayRecitation || "-"}</p>
+                <p><span class="font-bold text-gray-800">🔄 مراجعة:</span> ${i.todayReview || "-"}</p>
+                <p><span class="font-bold text-gray-800">📍 حفظ قادم:</span> ${i.nextAssignment || "-"}</p>
+                <p><span class="font-bold text-gray-800">📍 مراجعة قادمة:</span> ${i.nextReview || "-"}</p>
               </div>
               <div class="flex justify-between items-center mt-1 pt-2 border-t border-gray-100">
                 <p class="text-xs text-gray-500"><span class="font-bold text-gray-700">أخطاء:</span> ${i.mistakes}</p>
-                ${i.notes ? `<p class="text-[10px] text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg w-fit max-w-[75%] leading-relaxed">📝 ${i.notes}</p>` : ''}
+                ${i.notes ? `<p class="text-[10px] text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg w-fit max-w-[75%] leading-relaxed">📝 ${i.notes}</p>` : ""}
               </div>
-            </div>`).join('');
-        } else { 
-          cont.innerHTML = `<p class="text-sm text-gray-500 text-center py-6">لم يتم تسجيل أي تسميع في [ ${currentHalaqah} ] بهذا التاريخ.</p>`; 
+            </div>`,
+              )
+              .join("");
+          } else {
+            cont.innerHTML = `<p class="text-sm text-gray-500 text-center py-6">لم يتم تسجيل أي تسميع في [ ${currentHalaqah} ] بهذا التاريخ.</p>`;
+          }
+        } catch (err) {
+          cont.innerHTML =
+            '<p class="text-sm text-red-500 text-center py-6">حدث خطأ أثناء تحميل السجل.</p>';
         }
-      } catch (err) { 
-        cont.innerHTML = '<p class="text-sm text-red-500 text-center py-6">حدث خطأ أثناء تحميل السجل.</p>'; 
       }
-    }
-  </script>
-</body>
+    </script>
+  </body>
 </html>
